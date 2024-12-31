@@ -1,8 +1,8 @@
-Name: Shravani Achal Hendre
-Company: Student
-ID: CT08DU
-Domain: Cyber Security
-Duration: Dec 25 to Jan 25 (4 weeks)
+Name: Shravani Achal Hendre 
+Company: Student 
+ID: CT08DU 
+Domain: Cyber Security 
+Duration: Dec 25 to Jan 25 (4 weeks) 
 Mentor: N. Santosh 
 
 **Overview of the Network Vulnerability Scanner Project** 
