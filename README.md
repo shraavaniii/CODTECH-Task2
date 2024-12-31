@@ -5,7 +5,7 @@ Domain: Cyber Security
 Duration: Dec 25 to Jan 25 (4 weeks)  
 Mentor: N. Santosh 
 
-**Overview of the Network Vulnerability Scanner Project**  
+**__Overview of the Network Vulnerability Scanner Project__**  
 This project is a simple network vulnerability scanner that performs scans on either IP addresses or URLs to identify potential security risks associated with open ports and outdated software versions. The scanner checks for common vulnerabilities on specific ports and examines web servers for outdated software or misconfigurations. Here's a breakdown of its functionality:
 
 *1. Port Scanning:* 
