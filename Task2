@@ -1,0 +1,136 @@
+import socket
+import requests
+import ipaddress
+import re
+from concurrent.futures import ThreadPoolExecutor
+
+# Common ports to scan
+COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 443, 445, 3389]
+
+# Vulnerabilities associated with specific ports
+VULNERABILITIES = {
+    21: "FTP - Potential for anonymous login and data interception.",
+    22: "SSH - Outdated versions may be vulnerable to brute-force attacks.",
+    23: "Telnet - Insecure protocol with plaintext transmission.",
+    25: "SMTP - Could be vulnerable to spam relays.",
+    53: "DNS - Could be exploited for DNS amplification attacks.",
+    80: "HTTP - Potential for outdated or misconfigured web servers.",
+    110: "POP3 - Potential for insecure authentication.",
+    443: "HTTPS - SSL/TLS misconfigurations can lead to vulnerabilities.",
+    445: "SMB - Known vulnerabilities such as EternalBlue.",
+    3389: "RDP - Potential for brute-force and vulnerability exploitation."
+}
+
+# Headers to identify outdated software
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+}
+
+# Function to scan open ports
+def scan_ports(ip):
+    open_ports = []
+    vulnerabilities = []
+    for port in COMMON_PORTS:
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(1)  # Timeout of 1 second
+                if sock.connect_ex((ip, port)) == 0:
+                    open_ports.append(port)
+                    vulnerabilities.append(VULNERABILITIES.get(port, "Potential vulnerability detected."))
+        except Exception as e:
+            print(f"Error scanning port {port} on {ip}: {e}")
+    return open_ports, vulnerabilities
+
+# Function to check for outdated software on a website
+def check_software(url):
+    try:
+        response = requests.get(url, headers=HEADERS, timeout=5)
+        server_header = response.headers.get("Server", "Unknown")
+        return server_header
+    except requests.RequestException as e:
+        return f"Error: {e}"
+
+# Function to scan for misconfigurations
+def scan_misconfigurations(ip):
+    misconfigurations = []
+    if ip.startswith("192.168") or ip.startswith("10."):
+        misconfigurations.append("Private IP range detected")
+    return misconfigurations
+
+# Function to validate if input is a valid IP address
+def is_valid_ip(ip):
+    try:
+        ipaddress.ip_address(ip)
+        return True
+    except ValueError:
+        return False
+
+# Function to validate if input is a valid URL
+def is_valid_url(url):
+    url_regex = re.compile(
+        r'^(https?:\/\/)?'                # Optional scheme (http or https)
+        r'([a-zA-Z0-9.-]+)'               # Domain name
+        r'(\.[a-zA-Z]{2,})'               # Top-level domain
+        r'(\/[^\s]*)?$'                   # Optional path
+    )
+    return re.match(url_regex, url) is not None
+
+# Main function
+def vulnerability_scan(target):
+    print(f"Starting scan for {target}\n")
+
+    # Validate input
+    if is_valid_ip(target):
+        print(f"{target} is a valid IP address.\n")
+        open_ports, vulnerabilities = scan_ports(target)
+        misconfigurations = scan_misconfigurations(target)
+
+        print("=== Open Ports ===")
+        if open_ports:
+            for port in open_ports:
+                print(f"- Port {port} is open")
+            print("\n=== Vulnerabilities ===")
+            for vulnerability in vulnerabilities:
+                print(f"- {vulnerability}")
+        else:
+            print("No open ports found.")
+        
+        if not open_ports:
+            print("No vulnerabilities detected in open ports.")
+
+        print("\n=== Misconfigurations ===")
+        if misconfigurations:
+            for issue in misconfigurations:
+                print(f"- {issue}")
+        else:
+            print("No misconfigurations detected.")
+        
+        if not misconfigurations:
+            print("No vulnerabilities detected in misconfigurations.")
+
+    elif is_valid_url(target):
+        print(f"{target} is a valid URL.\n")
+        software_info = check_software(target)
+        print("=== Website Software Info ===")
+        print(f"Software: {software_info}")
+        
+        if software_info == "Unknown":
+            print("No outdated software detected on the website.")
+        else:
+            print("\n=== Potential Software Vulnerabilities ===")
+            
+            # Example: If outdated server is detected, flag potential vulnerabilities
+            if "Apache" in software_info:
+                print("- Apache HTTP Server detected - Potential outdated version vulnerabilities.")
+            elif "nginx" in software_info:
+                print("- Nginx detected - Ensure TLS is configured securely.")
+            elif "Microsoft-IIS" in software_info:
+                print("- IIS detected - Check for known vulnerabilities like IIS 6.0.")
+
+    else:
+        print("Invalid target. Please enter a valid IP address or URL.")
+
+# Example usage
+if __name__ == "__main__":
+    target = input("Enter the IP or URL to scan: ").strip()
+    vulnerability_scan(target)
